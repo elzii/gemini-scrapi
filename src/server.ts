@@ -10,7 +10,7 @@ import {
   type ModelListResponse,
 } from "./types.js";
 
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 6331);
 const API_KEY = process.env.API_KEY || "sk-gemini-scrapi-local";
 const REQUEST_TIMEOUT_MS = Number(process.env.REQUEST_TIMEOUT_MS || 120000);
 
