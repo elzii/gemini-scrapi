@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import fs from "node:fs";
 import { Camoufox } from "camoufox-js";
@@ -10,6 +11,30 @@ import {
   type ObserverPollResult,
 } from "./observer.js";
 import type { ModelObject } from "../types.js";
+
+function resolveProfileDir(dir?: string): string | undefined {
+  if (dir && dir.trim().length > 0) {
+    let resolved = dir.trim();
+    if (resolved.startsWith("~/") || resolved === "~") {
+      resolved = path.join(os.homedir(), resolved.slice(1));
+    }
+    resolved = path.resolve(resolved);
+    if (fs.existsSync(resolved)) {
+      return resolved;
+    }
+  }
+
+  // Fallback to default Camoufox profile if available
+  const defaultProfile = path.join(
+    os.homedir(),
+    "Library/Application Support/camoufox/Profiles/2jpccw9p.default-default"
+  );
+  if (fs.existsSync(defaultProfile)) {
+    return defaultProfile;
+  }
+
+  return undefined;
+}
 
 export interface AdapterOptions {
   headless?: boolean;
@@ -30,7 +55,7 @@ export class GeminiAdapter {
     this.options = {
       headless: options.headless ?? (process.env.HEADLESS === "true"),
       humanize: options.humanize ?? true,
-      profileDir: options.profileDir ?? process.env.CAMOUFOX_PROFILE_DIR,
+      profileDir: resolveProfileDir(options.profileDir ?? process.env.CAMOUFOX_PROFILE_DIR),
       cookiesPath: options.cookiesPath ?? path.resolve(process.cwd(), "cookies.json"),
       geminiUrl: options.geminiUrl ?? process.env.GEMINI_URL ?? "https://gemini.google.com/app",
     };
@@ -47,6 +72,7 @@ export class GeminiAdapter {
     };
 
     if (this.options.profileDir && fs.existsSync(this.options.profileDir)) {
+      console.log(`Using authenticated Camoufox profile: ${this.options.profileDir}`);
       camoufoxArgs.user_data_dir = this.options.profileDir;
     }
 
